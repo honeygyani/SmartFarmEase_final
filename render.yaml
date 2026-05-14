@@ -3,7 +3,6 @@ services:
     name: smartfarmease-frontend
     runtime: static
     plan: free
-    region: singapore
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: frontend/build
     routes:
