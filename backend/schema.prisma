@@ -1,0 +1,247 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = 5
+}
+
+enum UserRole {
+  farmer
+  customer
+  admin
+}
+
+enum RequestStatus {
+  pending
+  completed
+  cancelled
+}
+
+enum ProposalStatus {
+  pending
+  voting
+  accepted
+  rejected
+  vetoed
+  converted
+}
+
+enum OrderStatus {
+  created
+  paid
+  packed
+  dispatched
+  shipped
+  delivered
+  cancelled
+}
+
+enum LobbyStatus {
+  open
+  ready
+  deal_pending
+  closed
+}
+
+enum InventoryStatus {
+  available
+  committed
+  sold
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  hashed_password String
+  full_name       String
+  role            UserRole @default(customer)
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  deleted_at      DateTime?
+
+  inventory_items  Inventory[]
+  market_requests  MarketRequest[]
+  proposals        Proposal[]
+  votes            ProposalVote[]
+  orders           Order[]
+  lobbies_led      Lobby[]         @relation("LobbyLeader")
+  contributions    Contribution[]
+  messages         LobbyMessage[]
+  health_logs      HealthTrendLog[]
+
+  @@map("users")
+}
+
+model HealthTrendLog {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  service_type    String   @db.VarChar(50)
+  request_payload Json
+  response_data   Json
+  latency_ms      Float
+  status_code     Int
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  deleted_at      DateTime?
+
+  user            User     @relation(fields: [user_id], references: [id])
+
+  @@map("health_logs")
+}
+
+model Inventory {
+  id              Int             @id @default(autoincrement())
+  farmer_id       Int
+  commodity       String          @db.VarChar(100)
+  quantity        Float           @default(0.0)
+  price_per_unit  Float
+  unit            String          @db.VarChar(20)
+  status          InventoryStatus @default(available)
+  version         Int             @default(1)
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+  deleted_at      DateTime?
+
+  farmer          User            @relation(fields: [farmer_id], references: [id])
+
+  @@map("inventory")
+}
+
+model MarketRequest {
+  id              Int           @id @default(autoincrement())
+  customer_id     Int
+  commodity       String        @db.VarChar(100)
+  target_quantity Float
+  target_price    Float?
+  status          RequestStatus @default(pending)
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  deleted_at      DateTime?
+
+  customer        User          @relation(fields: [customer_id], references: [id])
+  lobby           Lobby?
+
+  @@map("market_requests")
+}
+
+model Lobby {
+  id                     Int           @id @default(autoincrement())
+  request_id             Int?          @unique
+  leader_id              Int?
+  commodity              String        @db.VarChar(100)
+  target_quantity        Float
+  current_quantity       Float         @default(0.0)
+  aggregate_health_score Float         @default(100.0)
+  status                 LobbyStatus   @default(open)
+  created_at             DateTime      @default(now())
+  updated_at             DateTime      @updatedAt
+  deleted_at             DateTime?
+
+  request                MarketRequest? @relation(fields: [request_id], references: [id])
+  leader                 User?          @relation("LobbyLeader", fields: [leader_id], references: [id])
+  contributions          Contribution[]
+  proposals              Proposal[]
+  messages               LobbyMessage[]
+
+  @@map("lobbies")
+}
+
+model Contribution {
+  id              Int      @id @default(autoincrement())
+  lobby_id        Int
+  farmer_id       Int
+  quantity        Float
+  price_bid       Float
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  deleted_at      DateTime?
+
+  lobby           Lobby    @relation(fields: [lobby_id], references: [id])
+  farmer          User     @relation(fields: [farmer_id], references: [id])
+
+  @@map("contributions")
+}
+
+model Proposal {
+  id              Int            @id @default(autoincrement())
+  customer_id     Int
+  lobby_id        Int
+  proposed_price  Float
+  notes           String?        @db.VarChar(500)
+  status          ProposalStatus @default(pending)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+  deleted_at      DateTime?
+
+  customer        User           @relation(fields: [customer_id], references: [id])
+  lobby           Lobby          @relation(fields: [lobby_id], references: [id])
+  votes           ProposalVote[]
+  order           Order?
+
+  @@map("proposals")
+}
+
+model ProposalVote {
+  proposal_id     Int
+  farmer_id       Int
+  agree           Boolean        @default(true)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+  deleted_at      DateTime?
+
+  proposal        Proposal       @relation(fields: [proposal_id], references: [id])
+  farmer          User           @relation(fields: [farmer_id], references: [id])
+
+  @@id([proposal_id, farmer_id])
+  @@map("proposal_votes")
+}
+
+model Order {
+  id              Int         @id @default(autoincrement())
+  proposal_id     Int         @unique
+  customer_id     Int
+  total_amount    Float
+  status          OrderStatus @default(created)
+  rating          Int?
+  feedback        String?     @db.VarChar(500)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+  deleted_at      DateTime?
+
+  proposal        Proposal    @relation(fields: [proposal_id], references: [id])
+  customer        User        @relation(fields: [customer_id], references: [id])
+
+  @@map("orders")
+}
+
+model LobbyMessage {
+  id              Int      @id @default(autoincrement())
+  lobby_id        Int
+  sender_id       Int
+  content         String   @db.VarChar(1000)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  deleted_at      DateTime?
+
+  lobby           Lobby    @relation(fields: [lobby_id], references: [id])
+  sender          User     @relation(fields: [sender_id], references: [id])
+
+  @@map("lobby_messages")
+}
+
+model SystemEvent {
+  id              Int      @id @default(autoincrement())
+  event_type      String   @db.VarChar(100)
+  user_id         Int?
+  payload         Json
+  description     String?  @db.VarChar(255)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  deleted_at      DateTime?
+
+  @@map("events")
+}

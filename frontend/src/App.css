@@ -1,0 +1,102 @@
+/* === Entry animations (0.3s, used sparingly) === */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Subtle pulse for primary CTA buttons — only animation allowed to loop */
+@keyframes subtlePulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.25);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(46, 125, 50, 0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.35s ease-out both;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out both;
+}
+
+.cta-pulse {
+  animation: subtlePulse 2.5s ease-in-out infinite;
+}
+
+/* ─── Google Translate Overrides ─── */
+/* Hide the default top-bar injected by Google Translate */
+.goog-te-banner-frame,
+.skiptranslate {
+  display: none !important;
+}
+
+/* Prevent the body from being pushed down by Google's iframe */
+body {
+  top: 0 !important;
+}
+
+/* Hide the default Google Translate branding gadget */
+.goog-te-gadget {
+  font-size: 0 !important;
+}
+
+/* Prevent translated text from getting highlighted styling */
+.goog-te-menu-value span {
+  color: inherit !important;
+}
+
+font[style] {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ─── Lando Norris Style Utilities ─── */
+.neon-glow {
+  text-shadow: 0 0 20px rgba(212, 255, 0, 0.4);
+}
+
+.neon-border {
+  border: 1px solid #D4FF00 !important;
+  box-shadow: 0 0 15px rgba(212, 255, 0, 0.2);
+}
+
+.sharp-card {
+  border-radius: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: #0A0A0A !important;
+}
+
+.performance-text {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 900;
+}
+
+/* Custom Selection Color */
+::selection {
+  background: #D4FF00;
+  color: #000000;
+}

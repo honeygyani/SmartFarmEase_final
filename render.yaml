@@ -1,0 +1,88 @@
+services:
+  - type: web
+    name: smartfarmease-frontend
+    runtime: static
+    plan: free
+    region: singapore
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: REACT_APP_API_URL
+        sync: false
+
+  - type: web
+    name: smartfarmease-backend
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: cd backend && pip install -r requirements.txt && prisma generate --schema=schema.prisma && prisma migrate deploy --schema=schema.prisma
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PROJECT_NAME
+        value: SmartFarmEase Backend
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "7"
+      - key: DATABASE_URL
+        sync: false
+      - key: AI_DISEASE_URL
+        sync: false
+      - key: AI_CROP_REC_URL
+        sync: false
+      - key: AI_FERTILIZER_URL
+        sync: false
+      - key: AI_SOWING_URL
+        sync: false
+      - key: AI_PRICE_URL
+        value: https://price-forecasting-disabled.invalid
+
+  - type: web
+    name: smartfarmease-disease
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install fastapi uvicorn python-multipart -r requirements_CD.txt
+    startCommand: cd server_files && uvicorn server_CD:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+
+  - type: web
+    name: smartfarmease-crop
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install fastapi uvicorn pydantic requests -r requirements_CR.txt
+    startCommand: cd server_files && uvicorn server_CR:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: AI_PRICE_URL
+        value: https://price-forecasting-disabled.invalid
+
+  - type: web
+    name: smartfarmease-fertilizer
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install fastapi uvicorn pydantic -r requirements_FS.txt
+    startCommand: cd server_files && uvicorn server_FS:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+
+  - type: web
+    name: smartfarmease-sowing-window
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install fastapi uvicorn pydantic -r requirements_SW.txt
+    startCommand: cd server_files && uvicorn server_SW:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /

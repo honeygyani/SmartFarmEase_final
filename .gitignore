@@ -1,0 +1,27 @@
+# Dependencies and local environments
+node_modules/
+frontend/node_modules/
+venv*/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local secrets
+.env
+backend/.env
+*.env.local
+
+# Build and generated output
+frontend/build/
+frontend/.cache/
+.cache/
+*.log
+
+# Large model artifacts that should not be deployed for the panel demo
+models/Price Forecasting/
+
+# Local editor and OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
