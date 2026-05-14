@@ -25,6 +25,8 @@ services:
         value: SmartFarmEase Backend
       - key: ENVIRONMENT
         value: production
+      - key: PYTHON_VERSION
+        value: 3.11.9
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM
@@ -54,6 +56,9 @@ services:
     buildCommand: pip install fastapi uvicorn python-multipart -r requirements_CD.txt
     startCommand: cd server_files && uvicorn server_CD:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
 
   - type: web
     name: smartfarmease-crop
@@ -64,6 +69,8 @@ services:
     startCommand: cd server_files && uvicorn server_CR:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
       - key: AI_PRICE_URL
         value: https://price-forecasting-disabled.invalid
 
@@ -75,6 +82,9 @@ services:
     buildCommand: pip install fastapi uvicorn pydantic -r requirements_FS.txt
     startCommand: cd server_files && uvicorn server_FS:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
 
   - type: web
     name: smartfarmease-sowing-window
@@ -84,3 +94,6 @@ services:
     buildCommand: pip install fastapi uvicorn pydantic -r requirements_SW.txt
     startCommand: cd server_files && uvicorn server_SW:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
